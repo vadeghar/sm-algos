@@ -220,6 +220,8 @@ public class StraddleServiceImpl {
 			}
 		}
 		Double diffInPerc = CommonUtils.priceDiffInPerc(totPePremHve, totCePremHve);
+		log.info("\t\t\t(STRADDLE) CE & PE PREM DIFF: "+Constants.DECIMAL_FORMAT.format(diffInPerc));
+		log.info(", IF >= 80%, CLOSE ALL CE& PE POSITIONS");
 		System.out.print("\t\t\t(STRADDLE) CE & PE PREM DIFF: "+Constants.DECIMAL_FORMAT.format(diffInPerc));
 		System.out.println(", IF >= 80%, CLOSE ALL CE& PE POSITIONS");
 		if(diffInPerc >= 80.0) {
@@ -410,9 +412,13 @@ public class StraddleServiceImpl {
 	}
 
 	private List<MyPosition> getNetPaperPositions() {
-		List<MyPosition> netPositions = CommonUtils.getAllPaperPositions(dataDir);
-		netPositions = netPositions.stream().filter(p -> p.getNetQuantity() != 0.0).collect(Collectors.toList());
-		return netPositions;
+		String dataFile = ExcelUtils.getCurrentFileNameWithPath(dataDir);
+		if(new File(dataFile).exists()) {
+			List<MyPosition> netPositions = CommonUtils.getAllPaperPositions(dataDir);
+			netPositions = netPositions.stream().filter(p -> p.getNetQuantity() != 0.0).collect(Collectors.toList());
+			return netPositions;
+		}
+		return null;
 	}
 
 	private void updateLatestPricesInFile() {

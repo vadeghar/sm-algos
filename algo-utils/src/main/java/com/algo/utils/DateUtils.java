@@ -59,7 +59,7 @@ public class DateUtils {
 		DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern(Constants.OPST_EXPIRY_FORMAT);
 		return formatter2.format(date).toUpperCase();
 	}
-	
+	// 25NOV2021
 	public static String opstraFormattedExpiry(LocalDate localDate) {
 		DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern(Constants.OPST_EXPIRY_FORMAT);
 		return formatter2.format(localDate).toUpperCase();
@@ -81,6 +81,13 @@ public class DateUtils {
 	
 	public static LocalDate getCurrentExpiry() {
 		return expiryDateList.stream().filter(exDate -> exDate.isAfter(LocalDate.now())).findFirst().get();
+	}
+	
+	public static LocalDate getNextThursdayFrom(LocalDate localDate) {
+		if(localDate == null)
+			return LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.THURSDAY));
+		else
+			return localDate.with(TemporalAdjusters.next(DayOfWeek.THURSDAY));
 	}
 	
 	public static boolean isMonthlyExpiry(LocalDate curExpiryDay) {

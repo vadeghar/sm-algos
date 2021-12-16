@@ -141,7 +141,6 @@ public class OpstraConnect implements ExtConnect {
 		return response;
 	}
 	
-	
 	private AlgoOptionChainList processResponse(OpstOptionChain body) {
 		AlgoOptionChainList processedResponse = new AlgoOptionChainList();
 		List<AlgoOptionChain> optionChainList = new ArrayList<>();

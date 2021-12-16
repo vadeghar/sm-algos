@@ -1,6 +1,7 @@
 package com.algo.utils;
 
 import java.awt.Toolkit;
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -51,8 +52,13 @@ public class CommonUtils {
 	
 	public static List<MyPosition> getAllPaperPositions(String dataDir) {
 		String kiteTradeFile = ExcelUtils.getCurrentFileNameWithPath(dataDir);
-		String[][] data = ExcelUtils.getFileData(kiteTradeFile);
 		List<MyPosition> allPositions = new ArrayList<>();
+		if(!(new File(kiteTradeFile).exists())) {
+			log.info("getAllPaperPositions> File: "+kiteTradeFile+" Not exist, Returning 0");
+			System.out.println("getAllPaperPositions> File: "+kiteTradeFile+" Not exist, Returning 0");
+			return allPositions;
+		}
+		String[][] data = ExcelUtils.getFileData(kiteTradeFile);
 		int i = 0;
 		for(String[] row : data) {
 			if(i == 0) {

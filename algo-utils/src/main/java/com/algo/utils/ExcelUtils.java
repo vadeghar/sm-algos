@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -30,6 +31,8 @@ import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.algo.model.MyPosition;
 
 public class ExcelUtils {
 	
@@ -237,6 +240,11 @@ public class ExcelUtils {
 	public static List<String> getAllSymbols(String fileFullPath) {
 		List<String> symbols = new ArrayList<>();
 		try {
+			if(!(new File(fileFullPath).exists())) {
+				log.info("getAllSymbols> File: "+fileFullPath+" Not exist");
+				System.out.println("getAllSymbols> File: "+fileFullPath+" Not exist");
+				return symbols;
+			}
 			FileInputStream inputStream = new FileInputStream(new File(fileFullPath));
             Workbook wb = WorkbookFactory.create(inputStream);
             Sheet sheet = wb.getSheetAt(0);
@@ -264,6 +272,11 @@ public class ExcelUtils {
 	public static void addOrUpdateRows(String fileFullPath, List<Object[]> bookRows) {
 		log.info("addOrUpdateRows>");
 		try {
+			if(!(new File(fileFullPath).exists())) {
+				log.info("addOrUpdateRows> File: "+fileFullPath+" Not exist");
+				System.out.println("addOrUpdateRows> File: "+fileFullPath+" Not exist");
+				return;
+			}
             for(Object[] bookRow: bookRows) {
             	addOrUpdateRow(fileFullPath, bookRow);
             }
@@ -350,9 +363,9 @@ public class ExcelUtils {
 		int fileNo = getLastGenerateFileNo(dir);
 		String fileName = "trades_"+(fileNo == 0 ? 1 : fileNo);
 		fileName = dir+File.separator+fileName+"."+ext;
-		File file = new File(fileName);
-		if(!file.exists())
-			ExcelUtils.createExcelFile(dir);
+//		File file = new File(fileName);
+//		if(!file.exists())
+//			ExcelUtils.createExcelFile(dir);
 		log.info("<getCurrentFileNameWithPath");
 		return fileName;
 	}
@@ -431,6 +444,11 @@ public class ExcelUtils {
 	public static String getValueByCellReference(String filePath, String cellRef) {
 		String cellVal = StringUtils.EMPTY;
 		try {
+			if(!(new File(filePath).exists())) {
+				log.info("getValueByCellReference> File: "+filePath+" Not exist, Returning 0");
+				System.out.println("getValueByCellReference> File: "+filePath+" Not exist, Returning 0");
+				return "0";
+			}
 			FileInputStream inputStream = new FileInputStream(new File(filePath));
 			Workbook wb = WorkbookFactory.create(inputStream);
 			Sheet sheet = wb.getSheetAt(0);
@@ -448,6 +466,10 @@ public class ExcelUtils {
 	
 	public static void setValueByCellReference(String filePath, String cellRef, Object value) {
 		try {
+			if(!(new File(filePath).exists())) {
+				log.info("setValueByCellReference> File: "+filePath+" not exist");
+				return;
+			}
 			FileInputStream inputStream = new FileInputStream(new File(filePath));
 			Workbook wb = WorkbookFactory.create(inputStream);
 			Sheet sheet = wb.getSheetAt(0);
@@ -476,6 +498,11 @@ public class ExcelUtils {
 	
 	public static void setValueWithRedBgByCellReference(String filePath, String cellRef, String value) {
 		try {
+			if(!(new File(filePath).exists())) {
+				log.info("setValueWithRedBgByCellReference> File: "+filePath+" Not exist, Returning 0");
+				System.out.println("setValueWithRedBgByCellReference> File: "+filePath+" Not exist, Returning 0");
+				return;
+			}
 			FileInputStream inputStream = new FileInputStream(new File(filePath));
 			Workbook wb = WorkbookFactory.create(inputStream);
 			Sheet sheet = wb.getSheetAt(0);

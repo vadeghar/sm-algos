@@ -52,12 +52,12 @@ public class PaperTradeStraddle {
 	// Theta gainers
 	@Scheduled(cron = "${app.straddle.cron.expression}")
 	public void monitorPaperStraddleAndDoAdjustments() {
-		if((LocalTime.now().isBefore(openingTime)) || (LocalTime.now().isAfter(closeTime) || LocalTime.now().equals(closeTime))) {
-			System.out.println("\n\n\n\n(STRADDLE) MARKET CLOSED, TIME: "+DateUtils.getDateTime(LocalDateTime.now()));
-			log.info("(STRADDLE) MARKET CLOSED");
-			straddleService.printAllPositionsFromSheet();
-			return;
-		}
+//		if((LocalTime.now().isBefore(openingTime)) || (LocalTime.now().isAfter(closeTime) || LocalTime.now().equals(closeTime))) {
+//			System.out.println("\n\n\n\n(STRADDLE) MARKET CLOSED, TIME: "+DateUtils.getDateTime(LocalDateTime.now()));
+//			log.info("(STRADDLE) MARKET CLOSED");
+//			straddleService.printAllPositionsFromSheet();
+//			return;
+//		}
 		
 		List<MyPosition> netPositions = straddleService.getPaperNetPositions();
 		if(CollectionUtils.isEmpty(netPositions))
