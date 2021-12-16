@@ -14,6 +14,7 @@ public class Constants {
 	public static final String DATE_TIME_FORMAT = "dd-MM-yyyy HH:mm:ss";
 	public static final String CLOSEING_TIME = "15:30";
 	public static final String OPENING_TIME = "09:30";
+	public static final String LAST_HOUR_STARTS_AT = "14:30";
 	public static final String SELL = "SELL";
 	public static final String REGULAR = "regular";
 	public static final String NFO = "NFO";

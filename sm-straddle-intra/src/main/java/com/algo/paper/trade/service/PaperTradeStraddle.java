@@ -4,6 +4,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,7 +29,7 @@ public class PaperTradeStraddle {
 	LocalTime openingTime = LocalTime.parse(Constants.OPENING_TIME);
 	LocalTime tradeStartTime = LocalTime.parse(Constants.INTRADAY_STRADDLE_START);
 	LocalTime tradeEndTime = LocalTime.parse(Constants.INTRADAY_STRADDLE_END);
-
+	LocalTime lastHourStartAt = LocalTime.parse(Constants.LAST_HOUR_STARTS_AT);
 	@Value("${app.straddle.closeOnTarget:false}")
 	private boolean closeOnTarget;
 
@@ -58,12 +59,16 @@ public class PaperTradeStraddle {
 //			straddleService.printAllPositionsFromSheet();
 //			return;
 //		}
-		
-		List<MyPosition> netPositions = straddleService.getPaperNetPositions();
-		if(CollectionUtils.isEmpty(netPositions))
-			placeStraddleStrategy(true);
-		List<MyPosition> sellPositions = netPositions.stream().filter(p -> p.getNetQuantity() < 0).collect(Collectors.toList());
-		// Start every day trade
+		boolean isCLosingTime = (LocalTime.now().isAfter(tradeEndTime) && LocalTime.now().isBefore(tradeEndTime.plusSeconds(30)));
+		List<MyPosition> allPositions = straddleService.getPaperNetPositions();
+		List<MyPosition> sellPositions = allPositions.stream().filter(p -> p.getNetQuantity() < 0).collect(Collectors.toList());
+		if(CollectionUtils.isEmpty(sellPositions) && !isCLosingTime) {
+			System.out.println("************* CREATING NEW (STRADDLE) POSITIONS ******************");
+			log.info("CREATING NEW (STRADDLE) POSITIONS");
+			placeStraddleStrategy(true);// Start every day trade
+		}
+		allPositions = straddleService.getPaperNetPositions();
+		sellPositions = allPositions.stream().filter(p -> p.getNetQuantity() < 0).collect(Collectors.toList());
 //		if((LocalTime.now().isAfter(tradeStartTime) && LocalTime.now().isBefore(tradeStartTime.plusSeconds(30))) && CollectionUtils.isNotEmpty(sellPositions)) {
 //			log.info("New Itraday order placing...");
 //			System.out.println("New Itraday order placing...");
@@ -71,71 +76,37 @@ public class PaperTradeStraddle {
 //			return;
 //		}
 		// Close every day trade
-//		if((LocalTime.now().isAfter(tradeEndTime) && LocalTime.now().isBefore(tradeEndTime.plusSeconds(30))) && CollectionUtils.isEmpty(sellPositions)) {
-//			log.info("Closing all itraday positions...");
-//			System.out.println("Closing all itraday positions...");
-//			straddleService.closeAllSellPositions(sellPositions);
-//			return;
-//		}
+		if(isCLosingTime && CollectionUtils.isNotEmpty(sellPositions)) {
+			log.info("Closing all itraday positions...");
+			System.out.println("Closing all itraday positions...");
+			straddleService.closeAllSellPositions(sellPositions);
+			return;
+		}
 		
 		System.out.println("\n\n\n\n\n\t\t\t(STRADDLE) PAPER - POSITIONS AS ON: "+DateUtils.getDateTime(LocalDateTime.now()));
 		log.info("PAPER (STRADDLE) - POSITIONS AS ON: "+DateUtils.getDateTime(LocalDateTime.now()));
-		
-		if(CollectionUtils.isEmpty(netPositions)) {
-			System.out.println("************* NO PAPER (STRADDLE) POSITIONS FOUND ******************");
-			log.info("NO PAPER (STRADDLE) POSITIONS FOUND");
-			return;
-		}
 		
 		if(CollectionUtils.isEmpty(sellPositions) || sellPositions.size() > 2) {
 			System.out.println("************* (STRADDLE) FOUND MORE THAN TWO PAPER (STRADDLE) POSITIONS ******************");
 			log.info("FOUND MORE THAN TWO PAPER (STRADDLE) POSITIONS");
 			return;
 		}
+		
 		if(closeOnTarget) {
 			boolean isCLosedAll = straddleService.checkTargetAndClosePositions(sellPositions);
-			if(isCLosedAll)
-				return;
+			if(isCLosedAll && LocalTime.now().isBefore(lastHourStartAt)) {
+				placeStraddleStrategy(false);
+			} 
 		}
 		if(useStopLoss) {
-			boolean isCLosedAll = straddleService.checkSLAndClosePositions2(sellPositions);
-			if(isCLosedAll) {
+			boolean isCLosedAll = straddleService.checkSLAndClosePositions(sellPositions);
+			if(isCLosedAll  && LocalTime.now().isBefore(lastHourStartAt)) {
 				placeStraddleStrategy(false);
-				return;
-			}
+			} 
 		}
-//		Double totCePrem = totalPositionPremium(sellPositions, Constants.CE);
-//		Double totPePrem = totalPositionPremium(sellPositions, Constants.PE);
-//		String newSellOptType = StringUtils.EMPTY;
-//		Double newSellPremNear = 0.0;
-//		Double diffInPerc = CommonUtils.priceDiffInPerc(totCePrem, totPePrem);
-//		System.out.println("\t\t\t(STRADDLE) CE AND PE PRICE DIFFERENCE: "+String.format("%.2f", diffInPerc)+"%\n\t\t\tWAITING FOR DIFFERENCE IF: "+adjustmentPerc+"%");
-//		log.info("\t\t\t(STRADDLE) CE AND PE PRICE DIFFERENCE: "+String.format("%.2f", diffInPerc)+"%\n\t\t\tWAITING FOR DIFFERENCE IF: "+adjustmentPerc+"%");
-//		if(Double.valueOf(String.format("%.2f", diffInPerc)) > adjustmentPerc) {
-//			if(totCePrem > totPePrem) {
-//				newSellOptType = Constants.PE;
-//				newSellPremNear = totCePrem * 25 / 100;
-//			} else {
-//				newSellOptType = Constants.CE;
-//				newSellPremNear = totPePrem * 25 / 100;
-//			}
-//			initAdjustmentAction(newSellOptType, newSellPremNear);
-//		}
-		straddleService.printAllPositionsFromSheet();
 		straddleService.updteTradeFile(false);
-	}
-
-	private void initAdjustmentAction(String optType, Double premNear) {
-		System.out.println("CODE NOT COMPLETED HERE");
-	}
-	
-	private Double totalPositionPremium(List<MyPosition> positions, String optType) {
-		Double prem = 0.0;
-		List<MyPosition> netPositions = positions.stream().filter(mp -> mp.getNetQuantity() < 0 && mp.getOptionType().equals(optType)).collect(Collectors.toList());
-		for(MyPosition pos: netPositions) {
-			prem = prem + pos.getCurrentPrice();
-		}
-		return prem;
+		straddleService.printAllPositionsFromSheet();
+		
 	}
 
 }
